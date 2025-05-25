@@ -1,6 +1,4 @@
 # 5a_Create_Socket_for_HTTP_for_webpage_upload_and_download
-## NAME= POOJA SRI P 
-## REGISTER NUMBER= 212224230197
 ## AIM :
 To write a PYTHON program for socket for HTTP for web page upload and download
 ## Algorithm
@@ -17,85 +15,85 @@ To write a PYTHON program for socket for HTTP for web page upload and download
 <BR>
 6.Stop the program
 <BR>
-## Program
+## Program 
 ```
 import socket
 
 def send_request(host, port, request):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
-        s.sendall(request.encode())  # Send the headers in plain text
-        response = b""
-        
-        # Handle large responses by receiving in chunks
-        while True:
-            chunk = s.recv(4096)
-            if not chunk:
-                break
-            response += chunk
-        
-    return response.decode()
+        s.sendall(request.encode())
+        response = s.recv(4096).decode()
+    return response
 
 def upload_file(host, port, filename):
     with open(filename, 'rb') as file:
         file_data = file.read()
         content_length = len(file_data)
-
-        # Properly formatted request headers
-        request_header = (f"POST /upload HTTP/1.1\r\n"
-                          f"Host: {host}\r\n"
-                          f"Content-Length: {content_length}\r\n"
-                          f"Connection: close\r\n\r\n")
-        
-        # Send the headers first
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((host, port))
-            s.sendall(request_header.encode())  # Send the header
-
-            # Now send the file data in binary format
-            s.sendall(file_data)
-
-            # Receive the response from the server
-            response = b""
-            while True:
-                chunk = s.recv(4096)
-                if not chunk:
-                    break
-                response += chunk
-        
-        return response.decode()
+        request = f"POST /upload HTTP/1.1\r\nHost: {host}\r\nContent-Length: {content_length}\r\n\r\n"
+        request += file_data.decode()
+        response = send_request(host, port, request)
+    return response
 
 def download_file(host, port, filename):
-    # Simple GET request to download the file
-    request = f"GET /{filename} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
-    
-    # Send request and receive response
+    request = f"GET /{filename} HTTP/1.1\r\nHost: {host}\r\n\r\n"
     response = send_request(host, port, request)
-    
-    # Split the response into headers and body
-    headers, file_content = response.split('\r\n\r\n', 1)
-    
-    # Save the file content in binary mode
+    # Assuming the response contains the file content after the headers
+    file_content = response.split('\r\n\r\n', 1)[1]
     with open(filename, 'wb') as file:
-        file.write(file_content.encode())  # Ensure this is binary-safe
-    
-    print("File downloaded successfully.")
+        file.write(file_content.encode())
 
-if __name__ == "__main__":
-    host = 'example.com'
+if _name_ == "_main_":
+    host = '93.184.216.34'
     port = 80
 
     # Upload file
-    upload_response = upload_file(host, port, 'mytext.txt')
+    upload_response = upload_file(host, port, 'example.txt')
     print("Upload response:", upload_response)
 
     # Download file
-    download_file(host, port, 'mytext.txt')
-
-
+    download_file(host, port, 'example.txt')
+    print("File downloaded successfully.")
+```
+```
+    import http.server
+    import socketserver
+    import os
+    
+    PORT = 8080
+    UPLOAD_DIR = "."
+    
+    class Handler(http.server.SimpleHTTPRequestHandler):
+        def do_POST(self):
+            try:
+                length = int(self.headers['Content-Length'])
+                data = self.rfile.read(length)
+    
+                # Save file with a fixed name or modify this to parse filename
+                with open("mytext.txt", "wb") as f:
+                    f.write(data)
+    
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"File uploaded successfully.")
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(f"Error: {str(e)}".encode())
+    
+    # Make sure we're in the correct directory
+    os.chdir(UPLOAD_DIR)
+    
+    try:
+        with socketserver.TCPServer(("", PORT), Handler) as httpd:
+            print(f"[*] Server running on http://localhost:{PORT}")
+            httpd.serve_forever()
+    except Exception as e:
+        print(f"[!] Server error: {e}")
 ```
 ## OUTPUT
-![Screenshot (82)](https://github.com/user-attachments/assets/76647ceb-3896-4bbe-88ce-ba37eb9531b7)
+![image](https://github.com/user-attachments/assets/f3bf1348-2e87-4159-b09d-5ba85ba25179)
+
 
 ## Result
 Thus the socket for HTTP for web page upload and download created and Executed
